@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:untitled2/api_widget.dart';
+import 'package:untitled2/config/global_config.dart';
 import 'package:untitled2/note_list.dart';
 import 'package:untitled2/tab_bar.dart';
 import 'package:untitled2/test.dart';
@@ -10,7 +12,12 @@ import 'note_edit.dart';
 import 'note_edit_layout2.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (ctx) => GlobalConfig()),
+    ],
+    child: MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -31,7 +38,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
 
   final String title;
 

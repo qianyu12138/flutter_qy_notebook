@@ -1,17 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:untitled2/config/global_config.dart';
 
 import 'db.dart';
 import 'note.dart';
 import 'note_edit.dart';
 
-class NoteListPage extends StatefulWidget {
+class NoteListPage extends StatelessWidget {
   @override
-  State<NoteListPage> createState() => _NoteListState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: MyDrawer(),
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text("list"),
+      ),
+      body: const NoteListView(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: (){
+          //导航到新路由
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) {
+              return NoteEditPage(0, true);
+            }),
+          );
+        },
+        tooltip: 'Increment',
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
 }
 
-class _NoteListState extends State<NoteListPage> {
+class NoteListView extends StatefulWidget {
+  const NoteListView({super.key});
+
+  @override
+  State<NoteListView> createState() => _NoteListState();
+}
+
+class _NoteListState extends State<NoteListView> {
   static const loadingTag = "##loading##"; //表尾标记
   bool loadFinish = false;
   final List<Note> _note_list = <Note>[Note.newNote(loadingTag)];
@@ -21,28 +49,9 @@ class _NoteListState extends State<NoteListPage> {
     super.initState();
   }
 
-  void refresh() async{
-    setState(() {
-      _note_list.clear();
-      _note_list.add(Note.newNote(loadingTag));
-      loadFinish = false;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: Consumer<GlobalConfig>(
-        builder: (ctx, global_config, child){
-          return MyDrawer();
-        },
-      ),
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text("list"),
-      ),
-      body: ListView.separated(
+    return ListView.separated(
         itemBuilder: (context, index) {
           if (_note_list[index].title == loadingTag) {
             //不足100条，继续获取数据
@@ -75,22 +84,7 @@ class _NoteListState extends State<NoteListPage> {
           return ListItem(_note_list[index]);
         },
         separatorBuilder: (context, index) => const Divider(height: .0),
-        itemCount: _note_list.length,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //导航到新路由
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) {
-              return NoteEditPage(0, true);
-            }),
-          ).then((val) =>  refresh());
-        },
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+        itemCount: _note_list.length);
   }
 
   void _loadNoteData(int offset) async {
@@ -173,7 +167,7 @@ class MyDrawer extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    Provider.of<GlobalConfig>(context).user_name,
+                    "qinayu",
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
