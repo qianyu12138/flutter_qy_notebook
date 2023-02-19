@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/db.dart';
+import 'package:untitled2/db/db.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:untitled2/utils.dart';
 
-import 'note.dart';
+import 'model/note.dart';
 
 class TestPage extends StatefulWidget {
   @override

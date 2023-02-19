@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled2/api_widget.dart';
 import 'package:untitled2/config/global_config.dart';
-import 'package:untitled2/note_list.dart';
-import 'package:untitled2/tab_bar.dart';
-import 'package:untitled2/test.dart';
+import 'package:untitled2/route/note_list3.dart';
 import 'package:untitled2/test2.dart';
 
 import 'list.dart';
-import 'note_edit.dart';
+import 'route/note_edit.dart';
 import 'note_edit_layout2.dart';
 
 void main() {
@@ -117,18 +115,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   MaterialPageRoute(builder: (context) {
                     return NoteEditPage(1, true);
-                  }),
-                );
-              },
-            ),
-            TextButton(
-              child: Text("test"),
-              onPressed: () {
-                //导航到新路由
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) {
-                    return TestFooterPage();
                   }),
                 );
               },

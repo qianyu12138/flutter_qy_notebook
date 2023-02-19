@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
 
-import 'db.dart';
+import 'db/db.dart';
 
 
 class InfiniteListPage extends StatelessWidget{
@@ -68,7 +68,7 @@ class InfiniteListViewState extends State<InfiniteListView> {
           }
         }
         //显示单词列表项
-        return ListTile(title: Text(_words[index]));
+        return ListItem();
       },
       separatorBuilder: (context, index) => const Divider(height: .0),
     );
@@ -85,5 +85,21 @@ class InfiniteListViewState extends State<InfiniteListView> {
         );
       });
     });
+  }
+}
+
+class ListItem extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => ListItemState();
+}
+
+class ListItemState extends State<ListItem>{
+  bool deleteMode = false;
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      // child: ListTile(title: Text(_words[index])),
+      // onLongPress: ,
+    );
   }
 }

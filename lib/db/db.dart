@@ -4,7 +4,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import 'note.dart';
+import '../model/note.dart';
 
 class DBProvider {
   static Database? _db;
@@ -103,5 +103,14 @@ class DBProvider {
     } else {
       return Note.newNoteFromMap(result[0]);
     }
+  }
+
+  Future<void> deleteNote(int noteId) async {
+    final db = await database;
+    await db.delete(
+      "tb_note",
+      where: "id=?",
+      whereArgs: [noteId],
+    );
   }
 }

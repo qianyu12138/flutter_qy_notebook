@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:untitled2/config/global_config.dart';
+import 'package:untitled2/list.dart';
 
-import 'db.dart';
-import 'note.dart';
+import '../db/db.dart';
+import '../model/note.dart';
 import 'note_edit.dart';
 
 class NoteListPage extends StatefulWidget {
@@ -71,7 +72,6 @@ class _NoteListState extends State<NoteListPage> {
               );
             }
           }
-          //显示单词列表项
           return ListItem(_note_list[index]);
         },
         separatorBuilder: (context, index) => const Divider(height: .0),
@@ -110,18 +110,26 @@ class _NoteListState extends State<NoteListPage> {
   }
 }
 
-class ListItem extends StatelessWidget {
+class ListItem extends StatefulWidget {
   Note note;
-
   ListItem(this.note);
 
+  @override
+  State<StatefulWidget> createState() => ListItemState(note);
+
+}
+
+class ListItemState extends State<ListItem> {
+  Note note;
+  bool deleteMode = false;
+  ListItemState(this.note);
   @override
   Widget build(BuildContext context) {
     return InkWell(
       child: ListTile(
         title: Text(note.title),
         subtitle: Text(getSummary(note.content)),
-        trailing: Text(note.createTime.toString()),
+        trailing: !deleteMode ? Text(note.createTime.toString()) : TextButton(onPressed: delete, child: Text("删除")),
       ),
       onTap: () {
         Navigator.push(
@@ -132,9 +140,19 @@ class ListItem extends StatelessWidget {
         );
       },
       onLongPress: () {
-        print("onLongPress");
+        setState(() {
+          deleteMode = true;
+        });
       },
     );
+  }
+
+  Future<void> delete() async {
+    await DBProvider().deleteNote(note.id);
+    setState(() {
+      deleteMode = false;
+    });
+    //todo 动画
   }
 
   String getSummary(String text) {
@@ -188,7 +206,7 @@ class MyDrawer extends StatelessWidget {
                     onTap: () {},
                   ),
                   ListTile(
-                    leading: const Icon(Icons.import_contacts),
+                    leading: const Icon(Icons.input),
                     title: const Text('导入'),
                     onTap: () {},
                   ),

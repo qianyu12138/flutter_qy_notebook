@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'db.dart';
-import 'note.dart';
+import 'db/db.dart';
+import 'model/note.dart';
 
 class APIPage extends StatelessWidget {
   @override

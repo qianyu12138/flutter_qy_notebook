@@ -1,134 +1,135 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:untitled2/config/global_config.dart';
 
-import 'db/db.dart';
-import 'model/note.dart';
-import 'route/note_edit.dart';
+import '../db/db.dart';
+import '../model/note.dart';
+import 'note_edit.dart';
 
-class NoteListPage extends StatelessWidget {
+class NoteListPage extends StatefulWidget {
+  @override
+  State<NoteListPage> createState() => _NoteListPageState();
+}
+
+class _NoteListPageState extends State<NoteListPage>{
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey(); // backing data
+  final List<Note> _note_list = <Note>[];
+
+
+  @override
+  void initState() {
+    _loadNoteData();
+    print("initState");
+  }
+
+  void _loadNoteData() async {
+    var newItems = await DBProvider().getNoteList();
+    print(newItems.length);
+    _note_list.insertAll(0, newItems);
+    print(_note_list.length);
+    for(int i=0;i<_note_list.length;i++){
+      _listKey.currentState!.insertItem(i);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: MyDrawer(),
+      drawer: Consumer<GlobalConfig>(
+        builder: (ctx, global_config, child){
+          return MyDrawer();
+        },
+      ),
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text("list"),
       ),
-      body: const NoteListView(),
+      body: AnimatedList(
+        key: _listKey,
+        itemBuilder: (context, index, animation) {
+          return _buildItem(_note_list[index], index, animation);
+        },
+        // separatorBuilder: (context, index) => const Divider(height: .0),
+        initialItemCount: _note_list.length,
+      ),
       floatingActionButton: FloatingActionButton(
-        onPressed: (){
+        onPressed: () {
           //导航到新路由
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
               return NoteEditPage(0, true);
             }),
-          );
+          );//todo 拦截返回，带参数是否刷新页面
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ),
     );
   }
-}
 
-class NoteListView extends StatefulWidget {
-  const NoteListView({super.key});
-
-  @override
-  State<NoteListView> createState() => _NoteListState();
-}
-
-class _NoteListState extends State<NoteListView> {
-  static const loadingTag = "##loading##"; //表尾标记
-  bool loadFinish = false;
-  final List<Note> _note_list = <Note>[Note.newNote(loadingTag)];
-
-  @override
-  void initState() {
-    super.initState();
+  Widget _buildItem(Note note, int removeIndex, Animation<double> animation) {
+    //因为AnimatedListRemovedItemBuilder也会调用这个方法，最好不要用index，remove调用时index所指向的位置已经不是要删除的item了
+    return SizeTransition(
+        sizeFactor: animation,
+        child: ListItem(note, removeIndex, (removeIndex) => removeItem(removeIndex)),
+      );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-        itemBuilder: (context, index) {
-          if (_note_list[index].title == loadingTag) {
-            //不足100条，继续获取数据
-            if (!loadFinish) {
-              //获取数据
-              _loadNoteData(_note_list.length - 1);
-              //加载时显示loading
-              return Container(
-                padding: const EdgeInsets.all(16.0),
-                alignment: Alignment.center,
-                child: const SizedBox(
-                  width: 24.0,
-                  height: 24.0,
-                  child: CircularProgressIndicator(strokeWidth: 2.0),
-                ),
-              );
-            } else {
-              //已经加载了100条数据，不再获取数据。
-              return Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(16.0),
-                child: const Text(
-                  "没有更多了",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              );
-            }
-          }
-          //显示单词列表项
-          return ListItem(_note_list[index]);
-        },
-        separatorBuilder: (context, index) => const Divider(height: .0),
-        itemCount: _note_list.length);
-  }
-
-  void _loadNoteData(int offset) async {
-    var newItems = await DBProvider().getNoteListPage(offset, 10);
-    setState(() {
-      if (newItems.isEmpty) {
-        loadFinish = true;
-      } else {
-        //重新构建列表
-        _note_list.insertAll(
-          _note_list.length - 1,
-          //每次生成20个单词
-          newItems,
-        );
-      }
-    });
+  removeItem(int index){
+    var removeNote = _note_list.removeAt(index);
+    AnimatedListRemovedItemBuilder builder = (context, animation) {
+      return _buildItem(removeNote, index, animation);
+    };
+    _listKey.currentState!.removeItem(index, builder);
   }
 }
 
-class ListItem extends StatelessWidget {
+class ListItem extends StatefulWidget {
   Note note;
+  int index;
+  final delete_fun;
+  ListItem(this.note, this.index, this.delete_fun);
 
-  ListItem(this.note);
+  @override
+  State<StatefulWidget> createState() => ListItemState();
+
+}
+
+class ListItemState extends State<ListItem> {
+  bool deleteMode = false;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       child: ListTile(
-        title: Text(note.title),
-        subtitle: Text(getSummary(note.content)),
-        trailing: Text(note.createTime.toString()),
+        title: Text(widget.note.title),
+        subtitle: Text(getSummary(widget.note.content)),
+        trailing: !deleteMode ? Text(widget.note.createTime.toString()) : TextButton(onPressed: delete, child: Text("删除" + widget.index.toString())),
       ),
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) {
-            return NoteEditPage(note.id, false);
+            return NoteEditPage(widget.note.id, false);
           }),
         );
       },
       onLongPress: () {
-        print("onLongPress");
+        setState(() {
+          deleteMode = true;
+        });
       },
     );
+  }
+
+  Future<void> delete() async {
+    await DBProvider().deleteNote(widget.note.id);
+    setState(() {
+      deleteMode = false;
+    });
+    widget.delete_fun(widget.index);
   }
 
   String getSummary(String text) {
@@ -167,7 +168,7 @@ class MyDrawer extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    "qinayu",
+                    Provider.of<GlobalConfig>(context).user_name,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ],
@@ -182,7 +183,7 @@ class MyDrawer extends StatelessWidget {
                     onTap: () {},
                   ),
                   ListTile(
-                    leading: const Icon(Icons.import_contacts),
+                    leading: const Icon(Icons.input),
                     title: const Text('导入'),
                     onTap: () {},
                   ),
@@ -213,3 +214,5 @@ class MyDrawer extends StatelessWidget {
     );
   }
 }
+
+

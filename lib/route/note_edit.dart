@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/db.dart';
+import 'package:untitled2/db/db.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:untitled2/utils.dart';
 
-import 'note.dart';
+import '../model/note.dart';
 
 class NoteEditPage extends StatefulWidget {
   int noteId;
@@ -41,6 +41,7 @@ class NoteEditPageState extends State<NoteEditPage> {
   @override
   void initState() {
     super.initState();
+    editLineNumController.text = "1";
     editController.addListener(() {
       int lineCount = '\n'.allMatches(editController.text).length + 1;
       String lineNumText = "";
@@ -152,19 +153,27 @@ class NoteEditPageState extends State<NoteEditPage> {
               Expanded(
                 child: TextButton(
                   onPressed: () async {
-                    if (widget.newly) {
+                    String showmsg;
+                    if (newly) {
                       int? id = await saveNote(
-                          titleController.text, editController.text);
+                        titleController.text,
+                        editController.text,
+                      );
                       setState(() {
                         noteId = id!;
                         newly = false;
                       });
+                      showmsg = "保存成功";
                     } else {
                       await updateNote(
-                          noteId, titleController.text, editController.text);
+                        noteId,
+                        titleController.text,
+                        editController.text,
+                      );
+                      showmsg = "更新成功";
                     }
                     Fluttertoast.showToast(
-                        msg: "保存成功",
+                        msg: showmsg,
                         toastLength: Toast.LENGTH_SHORT,
                         gravity: ToastGravity.BOTTOM,
                         timeInSecForIosWeb: 1,
