@@ -18,6 +18,7 @@ class NoteEditPage extends StatefulWidget {
 class NoteEditPageState extends State<NoteEditPage> {
   int noteId;
   bool newly;
+  int created_id = -1;
   TextEditingController titleController = TextEditingController();
   TextEditingController editLineNumController = TextEditingController();
   TextEditingController footerTextController = TextEditingController();
@@ -61,7 +62,7 @@ class NoteEditPageState extends State<NoteEditPage> {
   }
 
   _initText() async {
-    Note note = await getNote(noteId);
+    Note note = await getNote();
     titleController.text = note.title;
     editController.text = note.content;
     footerTextController.text =
@@ -70,128 +71,134 @@ class NoteEditPageState extends State<NoteEditPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text("笔记详情"),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.all(10.0),
-              child: Column(
-                children: [
-                  TextField(
-                    maxLines: 1,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      hintText: "标题",
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pop(context, created_id);
+        return false;
+      }, child: Scaffold(
+        appBar: AppBar(
+          // Here we take the value from the MyHomePage object that was created by
+          // the App.build method, and use it to set our appbar title.
+          title: Text("笔记详情"),
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.all(10.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      maxLines: 1,
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                        hintText: "标题",
+                      ),
+                      style: EDIT_STYLE,
+                      controller: titleController,
                     ),
-                    style: EDIT_STYLE,
-                    controller: titleController,
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Row(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.only(right: 10.0),
-                            child: IntrinsicWidth(
-                              // width: editLineNumWidth,
-                              child: TextField(
-                                textAlign: TextAlign.right,
-                                controller: editLineNumController,
-                                style: UNABLE_STYLE,
-                                strutStyle: EDIT_STRUT_STYLE,
-                                enabled: false,
-                                maxLines: null,
-                                decoration: InputDecoration(
-                                  border: InputBorder.none,
-                                  hintText: "中",
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(right: 10.0),
+                              child: IntrinsicWidth(
+                                // width: editLineNumWidth,
+                                child: TextField(
+                                  textAlign: TextAlign.right,
+                                  controller: editLineNumController,
+                                  style: UNABLE_STYLE,
+                                  strutStyle: EDIT_STRUT_STYLE,
+                                  enabled: false,
+                                  maxLines: null,
+                                  decoration: InputDecoration(
+                                    border: InputBorder.none,
+                                    hintText: "中",
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: TextField(
-                              controller: editController,
-                              maxLines: null,
-                              style: EDIT_STYLE,
-                              strutStyle: EDIT_STRUT_STYLE,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                                hintText: "请编辑内容",
+                            Expanded(
+                              child: TextField(
+                                controller: editController,
+                                maxLines: null,
+                                style: EDIT_STYLE,
+                                strutStyle: EDIT_STRUT_STYLE,
+                                decoration: InputDecoration(
+                                  border: InputBorder.none,
+                                  hintText: "请编辑内容",
+                                ),
                               ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  TextField(
-                    //footer
-                    style: UNABLE_STYLE,
-                    maxLines: null,
-                    enabled: false,
-                    textAlign: TextAlign.end,
-                    controller: footerTextController,
-                  ),
-                ],
+                    TextField(
+                      //footer
+                      style: UNABLE_STYLE,
+                      maxLines: null,
+                      enabled: false,
+                      textAlign: TextAlign.end,
+                      controller: footerTextController,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () {},
-                  child: Text("取消"),
+            Row(
+              children: [
+                Expanded(
+                  child: TextButton(
+                    onPressed: () {},
+                    child: Text("取消"),
+                  ),
                 ),
-              ),
-              Expanded(
-                child: TextButton(
-                  onPressed: () async {
-                    String showmsg;
-                    if (newly) {
-                      int? id = await saveNote(
-                        titleController.text,
-                        editController.text,
-                      );
-                      setState(() {
-                        noteId = id!;
-                        newly = false;
-                      });
-                      showmsg = "保存成功";
-                    } else {
-                      await updateNote(
-                        noteId,
-                        titleController.text,
-                        editController.text,
-                      );
-                      showmsg = "更新成功";
-                    }
-                    Fluttertoast.showToast(
-                        msg: showmsg,
-                        toastLength: Toast.LENGTH_SHORT,
-                        gravity: ToastGravity.BOTTOM,
-                        timeInSecForIosWeb: 1,
-                        backgroundColor: Colors.grey,
-                        textColor: Colors.white,
-                        fontSize: 16.0);
-                  },
-                  child: Text("保存"),
+                Expanded(
+                  child: TextButton(
+                    onPressed: () async {
+                      String showmsg;
+                      if (newly) {
+                        int? id = await saveNote(
+                          titleController.text,
+                          editController.text,
+                        );
+                        setState(() {
+                          noteId = id!;
+                          newly = false;
+                          created_id = id;
+                        });
+                        showmsg = "保存成功";
+                      } else {
+                        await updateNote(
+                          noteId,
+                          titleController.text,
+                          editController.text,
+                        );
+                        showmsg = "更新成功";
+                      }
+                      Fluttertoast.showToast(
+                          msg: showmsg,
+                          toastLength: Toast.LENGTH_SHORT,
+                          gravity: ToastGravity.BOTTOM,
+                          timeInSecForIosWeb: 1,
+                          backgroundColor: Colors.grey,
+                          textColor: Colors.white,
+                          fontSize: 16.0);
+                    },
+                    child: Text("保存"),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Future<Note> getNote(int noteId) async {
+  Future<Note> getNote() async {
     assert(!widget.newly);
     Note? note = await DBProvider().getNote(widget.noteId);
     if (note == null) throw Exception("note note exist");

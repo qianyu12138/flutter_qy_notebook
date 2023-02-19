@@ -19,14 +19,11 @@ class _NoteListPageState extends State<NoteListPage>{
   @override
   void initState() {
     _loadNoteData();
-    print("initState");
   }
 
   void _loadNoteData() async {
     var newItems = await DBProvider().getNoteList();
-    print(newItems.length);
     _note_list.insertAll(0, newItems);
-    print(_note_list.length);
     for(int i=0;i<_note_list.length;i++){
       _listKey.currentState!.insertItem(i);
     }
@@ -54,14 +51,15 @@ class _NoteListPageState extends State<NoteListPage>{
         initialItemCount: _note_list.length,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           //导航到新路由
-          Navigator.push(
+          var created_id = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
               return NoteEditPage(0, true);
             }),
-          );//todo 拦截返回，带参数是否刷新页面
+          );
+          process_create_return(created_id);
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
@@ -83,6 +81,19 @@ class _NoteListPageState extends State<NoteListPage>{
       return _buildItem(removeNote, index, animation);
     };
     _listKey.currentState!.removeItem(index, builder);
+  }
+
+  insertItem(int index, Note note){
+    _note_list.insert(index, note);
+    _listKey.currentState!.insertItem(index);
+  }
+
+  Future<void> process_create_return(int created_id) async {
+    if(created_id > 0) {
+      Note? note = await DBProvider().getNote(created_id);
+      if (note == null) throw Exception("note note exist");
+      insertItem(0, note);
+    }
   }
 }
 
