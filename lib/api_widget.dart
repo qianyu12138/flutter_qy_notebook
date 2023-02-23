@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:untitled2/utils.dart';
 
 import 'db/db.dart';
 import 'model/note.dart';
@@ -52,6 +53,12 @@ class APIState extends State<APIView> {
               setState(() {
                 text = noteList.length.toString();
               });
+            },
+          ),
+          TextButton(
+            child: Text("FLOAT"),
+            onPressed: () {
+              FLOAT(context).insert();
             },
           ),
         ],
