@@ -18,11 +18,13 @@ class NoteEditPage extends StatefulWidget {
 class NoteEditPageState extends State<NoteEditPage> {
   int noteId;
   bool newly;
+  bool editMode = false;
   int created_id = -1;
   TextEditingController titleController = TextEditingController();
   TextEditingController editLineNumController = TextEditingController();
   TextEditingController footerTextController = TextEditingController();
   TextEditingController editController = TextEditingController();
+  FocusNode editFocusNode = FocusNode();
 
   final TextStyle UNABLE_STYLE = TextStyle(
     color: Colors.grey,
@@ -37,7 +39,9 @@ class NoteEditPageState extends State<NoteEditPage> {
     leading: 0.4,
   );
 
-  NoteEditPageState(this.noteId, this.newly);
+  NoteEditPageState(this.noteId, this.newly){
+    if(newly) editMode = true;
+  }
 
   @override
   void initState() {
@@ -51,22 +55,17 @@ class NoteEditPageState extends State<NoteEditPage> {
       }
       lineNumText = lineNumText.replaceAll(RegExp(r'\n$'), "");
       editLineNumController.text = lineNumText;
-      // setState(() {
-      // editLineNumWidth = paintWidthWithTextStyle(EDIT_STYLE, lineCount.toString());
-      // });
     });
     if (!newly) {
       _initText();
     }
-    // editLineNumWidth = paintWidthWithTextStyle(EDIT_STYLE, "1");
   }
 
   _initText() async {
     Note note = await getNote();
     titleController.text = note.title;
     editController.text = note.content;
-    footerTextController.text =
-        "创建于:${note.createTime}\n更新于:${note.updateTime}";
+    footerTextController.text = "创建于:${note.createTime}\n更新于:${note.updateTime}";
   }
 
   @override
@@ -106,6 +105,7 @@ class NoteEditPageState extends State<NoteEditPage> {
                               child: IntrinsicWidth(
                                 // width: editLineNumWidth,
                                 child: TextField(
+                                  //行号
                                   textAlign: TextAlign.right,
                                   controller: editLineNumController,
                                   style: UNABLE_STYLE,
@@ -121,9 +121,12 @@ class NoteEditPageState extends State<NoteEditPage> {
                             ),
                             Expanded(
                               child: TextField(
+                                //编辑区域
                                 controller: editController,
                                 maxLines: null,
                                 style: EDIT_STYLE,
+                                enabled: editMode,
+                                focusNode: editFocusNode,
                                 strutStyle: EDIT_STRUT_STYLE,
                                 decoration: InputDecoration(
                                   border: InputBorder.none,
@@ -157,37 +160,9 @@ class NoteEditPageState extends State<NoteEditPage> {
                 ),
                 Expanded(
                   child: TextButton(
-                    onPressed: () async {
-                      String showmsg;
-                      if (newly) {
-                        int? id = await saveNote(
-                          titleController.text,
-                          editController.text,
-                        );
-                        setState(() {
-                          noteId = id!;
-                          newly = false;
-                          created_id = id;
-                        });
-                        showmsg = "保存成功";
-                      } else {
-                        await updateNote(
-                          noteId,
-                          titleController.text,
-                          editController.text,
-                        );
-                        showmsg = "更新成功";
-                      }
-                      Fluttertoast.showToast(
-                          msg: showmsg,
-                          toastLength: Toast.LENGTH_SHORT,
-                          gravity: ToastGravity.BOTTOM,
-                          timeInSecForIosWeb: 1,
-                          backgroundColor: Colors.grey,
-                          textColor: Colors.white,
-                          fontSize: 16.0);
-                    },
-                    child: Text("保存"),
+                    //编辑/保存
+                    onPressed: () => edit_button_fun(context),
+                    child: Text(editMode ? "保存" : "编辑"),
                   ),
                 ),
               ],
@@ -196,6 +171,50 @@ class NoteEditPageState extends State<NoteEditPage> {
         ),
       ),
     );
+  }
+
+  void edit_button_fun(BuildContext context) async {
+    if(editMode){
+      //保存
+      String showmsg;
+      if (newly) {
+        int? id = await saveNote(
+          titleController.text,
+          editController.text,
+        );
+        setState(() {
+          noteId = id!;
+          newly = false;
+          created_id = id;
+        });
+        showmsg = "保存成功";
+      } else {
+        await updateNote(
+          noteId,
+          titleController.text,
+          editController.text,
+        );
+        showmsg = "更新成功";
+      }
+      Fluttertoast.showToast(
+          msg: showmsg,
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          timeInSecForIosWeb: 1,
+          backgroundColor: Colors.grey,
+          textColor: Colors.white,
+          fontSize: 16.0);
+      setState(() {
+        editMode = false;
+      });
+      editFocusNode.unfocus();
+    } else {
+      //编辑
+      setState(() {
+        editMode = true;
+      });
+      FocusScope.of(context).requestFocus(editFocusNode);
+    }
   }
 
   Future<Note> getNote() async {
