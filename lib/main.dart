@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled2/api_widget.dart';
-import 'package:untitled2/config/global_config.dart';
-import 'package:untitled2/route/note_list3.dart';
-import 'package:untitled2/test2.dart';
+import 'package:qy_notebook/api_widget.dart';
+import 'package:qy_notebook/config/global_config.dart';
+import 'package:qy_notebook/route/note_list.dart';
+import 'package:qy_notebook/test2.dart';
 
 import 'list.dart';
 import 'route/note_edit.dart';

@@ -1,5 +1,6 @@
 import 'package:flutter_document_picker/flutter_document_picker.dart';
-import 'package:untitled2/constants/Constants.dart';
+
+import '../constants/Constants.dart';
 
 class FileSelector{
   /// 图片选取

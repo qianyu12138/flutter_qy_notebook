@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/db/db.dart';
+import 'package:qy_notebook/db/db.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:untitled2/component/float_window.dart';
 
 import '../model/note.dart';
+import '../utils.dart';
 
 class NoteEditPage extends StatefulWidget {
   int noteId;
@@ -65,7 +65,7 @@ class NoteEditPageState extends State<NoteEditPage> {
     Note note = await getNote();
     titleController.text = note.title;
     editController.text = note.content;
-    footerTextController.text = "创建于:${note.createTime}\n更新于:${note.updateTime}";
+    footerTextController.text = "创建于:${Utils.dateTime2Str(note.createTime)}\n更新于:${Utils.dateTime2Str(note.updateTime)}";
   }
 
   @override

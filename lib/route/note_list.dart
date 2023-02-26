@@ -1,33 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:untitled2/config/global_config.dart';
-import 'package:untitled2/list.dart';
+import 'package:qy_notebook/config/global_config.dart';
 
 import '../db/db.dart';
 import '../model/note.dart';
+import '../utils.dart';
 import 'note_edit.dart';
+import 'note_list_drawer.dart';
 
 class NoteListPage extends StatefulWidget {
   @override
-  State<NoteListPage> createState() => _NoteListState();
+  State<NoteListPage> createState() => _NoteListPageState();
 }
 
-class _NoteListState extends State<NoteListPage> {
-  static const loadingTag = "##loading##"; //表尾标记
-  bool loadFinish = false;
-  final List<Note> _note_list = <Note>[Note.newNote(loadingTag)];
+class _NoteListPageState extends State<NoteListPage>{
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey(); // backing data
+  final List<Note> _note_list = <Note>[];
+
 
   @override
   void initState() {
-    super.initState();
+    _loadNoteData();
   }
 
-  void refresh() async{
-    setState(() {
-      _note_list.clear();
-      _note_list.add(Note.newNote(loadingTag));
-      loadFinish = false;
-    });
+  void _loadNoteData() async {
+    var newItems = await DBProvider().getNoteList();
+    _note_list.insertAll(0, newItems);
+    for(int i=0;i<_note_list.length;i++){
+      _listKey.currentState!.insertItem(i);
+    }
   }
 
   @override
@@ -43,49 +44,24 @@ class _NoteListState extends State<NoteListPage> {
         // the App.build method, and use it to set our appbar title.
         title: Text("list"),
       ),
-      body: ListView.separated(
-        itemBuilder: (context, index) {
-          if (_note_list[index].title == loadingTag) {
-            //不足100条，继续获取数据
-            if (!loadFinish) {
-              //获取数据
-              _loadNoteData(_note_list.length - 1);
-              //加载时显示loading
-              return Container(
-                padding: const EdgeInsets.all(16.0),
-                alignment: Alignment.center,
-                child: const SizedBox(
-                  width: 24.0,
-                  height: 24.0,
-                  child: CircularProgressIndicator(strokeWidth: 2.0),
-                ),
-              );
-            } else {
-              //已经加载了100条数据，不再获取数据。
-              return Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.all(16.0),
-                child: const Text(
-                  "没有更多了",
-                  style: TextStyle(color: Colors.grey),
-                ),
-              );
-            }
-          }
-          return ListItem(_note_list[index]);
+      body: AnimatedList(
+        key: _listKey,
+        itemBuilder: (context, index, animation) {
+          return _buildItem(_note_list[index], index, animation);
         },
-        separatorBuilder: (context, index) => const Divider(height: .0),
-        itemCount: _note_list.length,
+        // separatorBuilder: (context, index) => const Divider(height: .0),
+        initialItemCount: _note_list.length,
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async {
           //导航到新路由
-          Navigator.push(
+          var created_id = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) {
               return NoteEditPage(0, true);
             }),
-          ).then((val) =>  refresh());
+          );
+          process_create_return(created_id);
         },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
@@ -93,49 +69,63 @@ class _NoteListState extends State<NoteListPage> {
     );
   }
 
-  void _loadNoteData(int offset) async {
-    var newItems = await DBProvider().getNoteListPage(offset, 10);
-    setState(() {
-      if (newItems.isEmpty) {
-        loadFinish = true;
-      } else {
-        //重新构建列表
-        _note_list.insertAll(
-          _note_list.length - 1,
-          //每次生成20个单词
-          newItems,
-        );
-      }
-    });
+  Widget _buildItem(Note note, int removeIndex, Animation<double> animation) {
+    //因为AnimatedListRemovedItemBuilder也会调用这个方法，最好不要用index，remove调用时index所指向的位置已经不是要删除的item了
+    return SizeTransition(
+        sizeFactor: animation,
+        child: ListItem(note, removeIndex, (removeIndex) => removeItem(removeIndex)),
+      );
+  }
+
+  removeItem(int index){
+    var removeNote = _note_list.removeAt(index);
+    AnimatedListRemovedItemBuilder builder = (context, animation) {
+      return _buildItem(removeNote, index, animation);
+    };
+    _listKey.currentState!.removeItem(index, builder);
+  }
+
+  insertItem(int index, Note note){
+    _note_list.insert(index, note);
+    _listKey.currentState!.insertItem(index);
+  }
+
+  Future<void> process_create_return(int created_id) async {
+    if(created_id > 0) {
+      Note? note = await DBProvider().getNote(created_id);
+      if (note == null) throw Exception("note note exist");
+      insertItem(0, note);
+    }
   }
 }
 
 class ListItem extends StatefulWidget {
   Note note;
-  ListItem(this.note);
+  int index;
+  final delete_fun;
+  ListItem(this.note, this.index, this.delete_fun);
 
   @override
-  State<StatefulWidget> createState() => ListItemState(note);
+  State<StatefulWidget> createState() => ListItemState();
 
 }
 
 class ListItemState extends State<ListItem> {
-  Note note;
   bool deleteMode = false;
-  ListItemState(this.note);
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       child: ListTile(
-        title: Text(note.title),
-        subtitle: Text(getSummary(note.content)),
-        trailing: !deleteMode ? Text(note.createTime.toString()) : TextButton(onPressed: delete, child: Text("删除")),
+        title: Text(widget.note.title),
+        subtitle: Text(getSummary(widget.note.content)),
+        trailing: !deleteMode ? Text(Utils.dateTime2Str(widget.note.createTime)) : TextButton(onPressed: delete, child: Text("删除" + widget.index.toString())),
       ),
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (context) {
-            return NoteEditPage(note.id, false);
+            return NoteEditPage(widget.note.id, false);
           }),
         );
       },
@@ -148,11 +138,11 @@ class ListItemState extends State<ListItem> {
   }
 
   Future<void> delete() async {
-    await DBProvider().deleteNote(note.id);
+    await DBProvider().deleteNote(widget.note.id);
     setState(() {
       deleteMode = false;
     });
-    //todo 动画
+    widget.delete_fun(widget.index);
   }
 
   String getSummary(String text) {
@@ -162,78 +152,4 @@ class ListItemState extends State<ListItem> {
   }
 }
 
-class MyDrawer extends StatelessWidget {
-  const MyDrawer({
-    Key? key,
-  }) : super(key: key);
 
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      child: MediaQuery.removePadding(
-        context: context,
-        //移除抽屉菜单顶部默认留白
-        removeTop: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 38.0),
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: ClipOval(
-                      child: Image.asset(
-                        "assert/img/head.jpeg",
-                        width: 80,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    Provider.of<GlobalConfig>(context).user_name,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                children: <Widget>[
-                  ListTile(
-                    leading: const Icon(Icons.account_circle_rounded),
-                    title: const Text('账户'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.input),
-                    title: const Text('导入'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.output),
-                    title: const Text('导出'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.cloud),
-                    title: const Text('云'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.settings),
-                    title: const Text('设置'),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: Text("v0.0.1"),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

@@ -60,8 +60,11 @@ class DBProvider {
 
   Future<List<Note>> getNoteList() async {
     final db = await database;
-    List<Map<String, dynamic>> result = await db.query('tb_note',
-        columns: ["id", "title", "content", "create_time", "update_time"]);
+    List<Map<String, dynamic>> result = await db.query(
+      'tb_note',
+      columns: ["id", "title", "content", "create_time", "update_time"],
+      orderBy: "create_time desc",
+    );
     return List.generate(result.length, (i) {
       return Note(
           id: result[i]["id"],
@@ -76,10 +79,13 @@ class DBProvider {
 
   Future<List<Note>> getNoteListPage(int offset, int pageSize) async {
     final db = await database;
-    List<Map<String, dynamic>> result = await db.query('tb_note',
-        columns: ["id", "title", "content", "create_time", "update_time"],
-        offset: offset,
-        limit: pageSize);
+    List<Map<String, dynamic>> result = await db.query(
+      'tb_note',
+      columns: ["id", "title", "content", "create_time", "update_time"],
+      offset: offset,
+      limit: pageSize,
+      orderBy: "create_time desc",
+    );
     return List.generate(result.length, (i) {
       return Note(
           id: result[i]["id"],

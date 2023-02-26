@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/component/float_window.dart';
+import 'package:qy_notebook/component/float_window.dart';
 
 import 'db/db.dart';
 import 'model/note.dart';
