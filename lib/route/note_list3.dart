@@ -5,6 +5,7 @@ import 'package:untitled2/config/global_config.dart';
 import '../db/db.dart';
 import '../model/note.dart';
 import 'note_edit.dart';
+import 'note_list_drawer.dart';
 
 class NoteListPage extends StatefulWidget {
   @override
@@ -147,82 +148,6 @@ class ListItemState extends State<ListItem> {
     if (text.indexOf("\n") > 0) text = text.substring(0, text.indexOf("\n"));
     if (text.length < 10) return text;
     return text.substring(0, 10) + "...";
-  }
-}
-
-class MyDrawer extends StatelessWidget {
-  const MyDrawer({
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Drawer(
-      child: MediaQuery.removePadding(
-        context: context,
-        //移除抽屉菜单顶部默认留白
-        removeTop: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(top: 38.0),
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: ClipOval(
-                      child: Image.asset(
-                        "assert/img/head.jpeg",
-                        width: 80,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    Provider.of<GlobalConfig>(context).user_name,
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                children: <Widget>[
-                  ListTile(
-                    leading: const Icon(Icons.account_circle_rounded),
-                    title: const Text('账户'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.input),
-                    title: const Text('导入'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.output),
-                    title: const Text('导出'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.cloud),
-                    title: const Text('云'),
-                    onTap: () {},
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.settings),
-                    title: const Text('设置'),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(20),
-              child: Text("v0.0.1"),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }
 

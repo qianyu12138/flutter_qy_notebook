@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:untitled2/utils.dart';
+import 'package:untitled2/component/float_window.dart';
 
 import 'db/db.dart';
 import 'model/note.dart';
@@ -58,7 +58,7 @@ class APIState extends State<APIView> {
           TextButton(
             child: Text("FLOAT"),
             onPressed: () {
-              FLOAT(context).insert();
+              FLOAT(context, ListView()).insert();
             },
           ),
         ],
