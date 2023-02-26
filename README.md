@@ -1,16 +1,17 @@
 # qy_notebook
 
-A new Flutter project.
+QianYu's notebook app
 
-## Getting Started
+## todo
 
-This project is a starting point for a Flutter application.
+setting [p1]
 
-A few resources to get you started if this is your first Flutter project:
+output file serialize [p0]
+open file by share [p0]
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+theme [p1]
+appbar background, edit page background [p1]
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+scroll bar [p0]
+
+notebook [p2]
